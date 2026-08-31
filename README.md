@@ -1,82 +1,173 @@
-# AviTON
+# AviTON — Team Checklist and File Assignments
 
-PHP 8 and MariaDB inventory borrowing website, using local Bootstrap 4.6 and Start Bootstrap SB Admin 2 assets. No application build step is needed.
+AviTON is a PHP and MariaDB inventory borrowing website using Bootstrap 4.6 and SB Admin 2. This README lists what to submit, which files each role should handle, and what still needs checking.
 
-## XAMPP setup
+The member names and roles come from the AviTON proposal. The file assignments below are a working guide, not proof of who wrote the existing code. Record actual completed work and evidence in the contribution document.
 
-1. Start Apache and MySQL in XAMPP. The database connection uses port 3306.
-2. The PDO constructor in `config/config.php` uses `localhost`, database `inventorydb`, username `root` and an empty password. Each setup page has its own matching PDO connection settings. This root connection is for local XAMPP use only.
-3. Open **http://localhost/aviton/database/createdb.php** to install `schema.sql`. Setup uses the same root connection; it does not create database accounts, change their passwords or rewrite config.php.
-4. Open **http://localhost/aviton/database/populatedb.php** to add the sample accounts and initial equipment. Existing passwords, equipment and borrowing quantities are not reset.
-5. Open **http://localhost/aviton/**.
+## What needs to be submitted
+
+The project instructions list these deliverables on page 15.
+
+| Required item | Files to include | Status / next step |
+|---|---|---|
+| Working website and source | Root PHP pages, `assets/`, `config/`, `includes/`, `database/` and supplied `.htaccess` files | Present; rehearse the complete website on XAMPP. |
+| Database structure | `database/schema.sql`, `database/createdb.php`, `database/populatedb.php` | Present; include executable files, not only the Word dictionary. |
+| Database ERD | `documents/02-Database-ERD-and-Data-Dictionary.docx` | Created; Baskin reviews the relationships and fields. |
+| Architecture diagram | `documents/03-System-Architecture-and-Design-Pattern.docx` | Created; Claus reviews and explains the request flow and pattern. |
+| Short system documentation | `documents/01-System-Documentation.docx` | Created; all members check their sections. |
+| Group member list | `documents/04-Team-Assignments-and-Contribution-Record.docx` | Five members listed; confirm spelling. |
+| Individual assignments | This README and document 04 | Listed; update if actual responsibilities change. |
+| Contribution evidence | Completed document 04 and real evidence files | Still needed from every member. |
+| Final presentation/demo | `documents/06-Presentation-and-Technical-Defense-Guide.docx` | Guide prepared; rehearse and present as a team. |
+
+`documents/05-Testing-and-Requirements-Compliance.docx` contains the audit summary and acceptance-test forms. `REQUIREMENTS-AUDIT.md` contains the earlier findings. Neither replaces actual test results or contribution evidence.
+
+The Word files passed structural checks, but full-page rendering was unavailable. Open them in Word and check page breaks, tables and diagrams before submitting.
+
+## Team roles and their files
+
+### Claus Marvin Hipolito — Project Lead / Architecture
+
+**Handle:** project structure, integration, the architecture explanation and the final submission.
+
+| Files | Responsibility |
+|---|---|
+| `dashboard.php`, `admin-dashboard.php` | Dashboard entry points and how each role reaches its page. |
+| `includes/dashboard-layout.php`, `includes/page-helpers.php` | Shared structure and page includes. Coordinate access checks with Nash. |
+| `config/config.php`, `read.php`, `validation.php`, `save.php` | Review how the layers connect; coordinate changes with feature owners. |
+| `README.md`, `REQUIREMENTS-AUDIT.md` | Keep assignments and remaining tasks clear. Distinguish code review from executed tests. |
+| Documents 01, 03 and 06 | System explanation, architecture diagram and presentation plan, with input from everyone. |
+
+**Still needed:** review the request flow, combine the final files, schedule rehearsal and confirm that everyone can explain their own work.
+
+### Baskin Carreon — Database / Backend
+
+**Handle:** the three tables, relationships, procedures, JOINs, PDO calls and database setup.
+
+| Files | Responsibility |
+|---|---|
+| `database/schema.sql` | Tables, keys, constraints, JOINs, transactions and stock/state rules. |
+| `database/createdb.php` | Create the database and load the schema and procedures. |
+| `database/populatedb.php` | Add missing samples without resetting existing data; coordinate password hashing with Nash. |
+| `config/config.php` | PDO connection and named methods that execute prepared procedure calls. |
+| `read.php` | Agree on query parameters, returned fields and reports with Christine. |
+| Document 02 | Review the ERD, four foreign keys, data dictionary and JOIN explanations. |
+
+**Still needed:** check setup on a separate demo database, verify the stock cycle with Christine, and test competing releases and duplicate requests.
+
+### Nash Sister — Authentication / Security
+
+**Handle:** registration, login/logout, hashing, sessions, CSRF, authorization and server validation.
+
+| Files | Responsibility |
+|---|---|
+| `index.php`, `register.php` | Login/registration behavior; coordinate form appearance with Julia. |
+| `includes/request-helpers.php` | Sessions, CSRF, roles, request handling, throttling and controlled errors. |
+| `includes/form-validation.php` | Shared server rules; coordinate equipment and borrowing rules with Christine. |
+| `validation.php`, `validate_registration.php` | Complete-form and registration field checks. |
+| `save.php` | Registration, login, logout and password changes; repeated validation before saving. |
+| `assets/js/auth.js`, `assets/js/ajax.js` | Authentication form binding and registration AJAX; share message work with Julia. |
+| `includes/account-settings.php`, `includes/setup-access.php` | Password form and local setup restrictions. |
+| Root `.htaccess`, `database/.htaccess`, `documents/.htaccess` | Review which files Apache may serve. |
+| Documents 01 and 05 | Security explanation and security-test evidence. |
+
+**Still needed:** test successful registration, password changes across two sessions, session expiry, missing CSRF, wrong-role actions and access to another user's records.
+
+### Christine Mercado — Core Features
+
+**Handle:** equipment CRUD, quantities, borrowing, admin confirmations, records, search and reports.
+
+| Files | Responsibility |
+|---|---|
+| `read.php` | Equipment, summaries, records, history, search/filtering and report requests. |
+| `save.php` | Equipment save/delete and borrow/return transitions; coordinate security with Nash. |
+| `assets/js/dashboard.js`, `assets/js/admin.js` | Dashboard actions, refreshes, equipment forms and admin-mode initialization. |
+| `assets/js/data.js` | Shared backend requests, XML responses, form submission and safe DOM updates; coordinate with Nash and Julia. |
+| `includes/equipment-section.php`, `includes/borrow-return-records.php` | Equipment controls, records and confirmation actions. |
+| `includes/inventory-overview.php`, `includes/inventory-reports.php`, `includes/dashboard-dialogs.php` | Totals, reports and action dialogs; Julia handles their appearance. |
+| `database/schema.sql`, `config/config.php` | Agree on procedure parameters and stock/state rules with Baskin. |
+| Documents 01, 05 and 06 | Workflows, feature-test results and the live CRUD/borrowing demonstration. |
+
+**Still needed:** run a successful CRUD test and full borrow/return cycle; check rejection/cancellation, stale edits and deletion of equipment with history.
+
+### Julia Navvarete — Frontend / Integration
+
+**Handle:** Bootstrap/SB Admin 2 layout, responsive pages, navigation, forms and clear AJAX messages.
+
+| Files | Responsibility |
+|---|---|
+| `assets/css/styles.css` | Styling, mobile layout, field messages, tables and dialogs. |
+| `assets/vendor/` | Retain Bootstrap, SB Admin 2, jQuery, icons and license notices. These are third-party assets, not original team code. |
+| `includes/page-head.php`, `includes/sidebar-navigation.php`, `includes/top-navigation.php` | Styles/scripts, sidebar and profile navigation. |
+| `includes/dashboard-layout.php`, `includes/inventory-overview.php` | Responsive layout, greeting and cards; coordinate structure with Claus. |
+| `includes/equipment-section.php`, `includes/borrow-return-records.php`, `includes/inventory-reports.php` | Readable tables, controls and empty states; coordinate actions with Christine. |
+| `includes/dashboard-dialogs.php`, `includes/account-settings.php`, `includes/setup-result.php` | Dialogs, account form and setup result page. |
+| `index.php`, `register.php`, `assets/js/ajax.js` | Login/registration layout, inline spans and friendly messages; Nash reviews validation rules. |
+| `assets/js/dashboard.js`, `assets/js/data.js` | Review interface updates and keyboard behavior with Christine. |
+| Documents 01, 05 and 06 | Interface instructions, mobile-test evidence and the website overview demo. |
+
+**Still needed:** check small screens, keyboard navigation, dialogs, readable tables, password confirmation and messages after correcting invalid input.
+
+## How to work on shared files
+
+- `save.php`: Nash handles account actions; Christine handles equipment/borrowing actions. Agree before changing shared request handling.
+- `read.php`: Christine handles request flow; Baskin handles procedure results. Keep field names consistent.
+- `config/config.php` and `database/schema.sql`: Baskin coordinates; Nash reviews account security and Christine reviews stock behavior.
+- `assets/js/ajax.js`: Julia handles the field-message experience; Nash keeps it aligned with server validation.
+- UI includes: Julia handles appearance; Christine handles feature behavior; Claus checks integration.
+- Every member completes their own entries in document 04. A role assignment does not prove a contribution.
+
+## System requirements to demonstrate
+
+The implementation contains these features. Rehearse a working example for each; this list does not claim every path has been tested.
+
+| Requirement | Where to demonstrate it | Lead |
+|---|---|---|
+| Authentication and two roles | Registration, login/logout and USER/ADMIN dashboards | Nash |
+| Related tables and JOINs | `schema.sql`, ERD, records and inventory reports | Baskin |
+| Create, read, update and delete | Equipment controls and backend actions | Christine |
+| Search and filtering | Equipment search and record status filters | Christine |
+| Client/server validation | Registration spans, validation endpoints and checks in `save.php` | Nash + Julia |
+| Security and sessions | Hashing, CSRF, role/ownership checks, protected pages and logout | Nash |
+| OOP and a design pattern | `Config`, `Validation`, `App`, `HttpError`; layered architecture and Config's data-access facade | Claus, with the class reviewers |
+| Usable interface | Bootstrap/SB Admin 2 pages, mobile layout and feedback | Julia |
+
+Keep these agreed project rules when making changes:
+
+- Only USER accounts borrow. An administrator needs a separate USER account to borrow.
+- Users choose positive whole-number quantities. There are no due dates or overdue rules.
+- Pending requests do not reserve stock. ADMIN confirms physical release and receipt; only those confirmations change available stock.
+- A return covers the whole record quantity. Equipment deletion is permanent but blocked by any linked borrowing record.
+- Keep exactly three tables. Definitions and transactions stay in `schema.sql`; Config uses prepared `CALL` statements. Setup PHP files may contain SQL.
+- Use backend requests and PHP sessions. Do not replace them with localStorage or JSON-based application data.
+
+## Remaining work before submission
+
+- [ ] Review assigned files and correct mismatches between code and documents.
+- [ ] Run successful registration, equipment CRUD and a complete borrow/return cycle on a demo database.
+- [ ] Run the remaining cases in document 05 and record results, including concurrency, session and mobile checks.
+- [ ] Add real contribution evidence for all five members to document 04, with dates and specific changes or test records. Do not invent authorship or commits.
+- [ ] Check all Word documents in Word, including diagrams, tables and page breaks.
+- [ ] Rehearse the 20-minute presentation with all five members and prepare for technical questions.
+- [ ] Package the source, database files, documents and evidence. Keep required vendor assets and license notices.
+- [ ] Confirm instructor-specific submission format, originality approval or other requirements.
+
+The earlier audit recorded 26 PHP syntax checks, five authored JavaScript syntax checks and 64 non-destructive checks passing. It did not rerun successful writes, a full borrowing cycle, concurrent stock updates or the complete mobile/session test matrix. Record remaining checks in document 05 rather than treating that audit as full coverage.
+
+## Quick XAMPP setup
+
+1. Keep the project directly in `C:/xampp2/htdocs/aviton/` and start Apache and MySQL.
+2. Use `localhost`, port 3306, database `inventorydb`, username `root` and an empty password. The Config constructor and both setup files must agree.
+3. Open `http://localhost/aviton/database/createdb.php`, then `http://localhost/aviton/database/populatedb.php` on the same computer.
+4. Open `http://localhost/aviton/`.
 
 | Username | Password | Role |
 |---|---|---|
 | Admin | Admin | ADMIN |
 | User | User | USER |
 
-These are local demonstration credentials. Passwords are stored as hashes. Change both passwords in Account before sharing the website. Registration and password changes require at least 12 characters; the sample accounts are a setup-only exception.
+These credentials work if the sample accounts were populated and their passwords have not changed. Setup stores hashes and does not reset existing passwords or stock. Registration and password changes require at least 12 characters; sample passwords are a setup-only exception.
 
-## Project structure
+Back up an existing database before setup. Reinstalling keeps compatible tables and rows; older incompatible drafts need a separate migration. If `Error: Code 0001` appears, check MySQL, credentials and database creation. Do not drop tables to fix a connection error. PHP must be able to write to its configured session/temp directory.
 
-```text
-aviton/
-  assets/
-    css/                   Project styles
-    js/                    AJAX and interface scripts
-    vendor/                Bootstrap, SB Admin 2, slim jQuery and fonts
-  config/
-    config.php             Connection settings and Config PDO class
-  database/
-    createdb.php           Browser-loadable schema installation
-    populatedb.php         Browser-loadable sample population
-    schema.sql             Tables and stored procedures
-  includes/                Shared page sections, validation, sessions and setup
-    request-helpers.php    Sessions, access checks and request handling
-    page-helpers.php       Page access and shared form fields
-    form-validation.php    Server-side form validation
-    setup-access.php       Local setup access and locking
-    setup-result.php       Setup result page
-    dashboard-layout.php   Shared user and admin dashboard layout
-    page-head.php          Page title, styles and scripts
-    sidebar-navigation.php Sidebar menu
-    top-navigation.php     Top navigation bar
-    inventory-overview.php Greeting and inventory summary
-    equipment-section.php  Equipment catalog and borrowing controls
-    borrow-return-records.php Borrowing records and admin confirmations
-    inventory-reports.php  Admin inventory reports
-    account-settings.php   Account details and password form
-    dashboard-dialogs.php  Action, equipment and history dialogs
-  index.php
-  register.php
-  dashboard.php
-  admin-dashboard.php
-  read.php
-  validation.php
-  validate_registration.php
-  save.php
-```
-
-The config folder contains only `config.php`. Named Config methods prepare direct `CALL sp_...` statements, execute bound parameters and fetch results. They do not read or parse SQL files. Table definitions, procedure bodies and borrowing transactions stay in `schema.sql`. Schema loading belongs only to `createdb.php`, and sample inserts belong only to `populatedb.php`. The two setup pages use direct PDO statements, following the supplied PHP examples: `createdb.php` creates the database and loads the schema; `populatedb.php` inserts sample arrays with prepared statements and hashed passwords.
-
-## Data and borrowing
-
-There are exactly three tables: `user`, `equipment` and `records`. History is stored as text in the relevant equipment or record row. Each history line contains a timestamp, event type, actor ID and hex-encoded actor/text fields separated by tabs. Encoding preserves punctuation, tabs and newlines in user text without allowing it to change the event format.
-
-Only USER accounts can borrow. ADMIN accounts manage equipment and confirm physical release and receipt; an administrator needs a separate USER account to borrow. Users choose positive whole-number quantities. There are no due dates or overdue rules.
-
-A pending request does not consume stock. Admin release reduces available stock, a return request leaves it on loan, and admin receipt restores the quantity. Stored procedures use row locks and transactions so failed or concurrent operations cannot corrupt stock. Equipment supports create, read, update and permanent delete. Admins must confirm deletion; it removes the entire equipment entry, all its units and its equipment change history. Deletion is blocked whenever any borrowing record references the item, including returned, rejected or cancelled requests, so transaction history remains intact. Stale edits and deletion attempts are rejected. Reports include INNER, LEFT, RIGHT and a FULL OUTER JOIN equivalent.
-
-Registration uses inline `checkField(...)` input/blur handlers and `XMLHttpRequest` in `assets/js/ajax.js`, following the supplied passenger-form example. Per-field requests go to `validate_registration.php` and return `VALID` or `INVALID|message` for the adjacent span. Username availability is checked on blur and submission; changing a password also rechecks its confirmation. Requests are debounced and stale responses are ignored. Passwords are never trimmed. Only the exact registration handlers are permitted by the page's content security policy.
-
-On submission, registration waits for field checks, validates the complete form through `validation.php`, then posts to `save.php`. Those complete-form responses use XML. Save repeats all server validation, so bypassing JavaScript cannot save invalid input. Other forms retain their existing AJAX submission flow. Authentication uses PHP sessions, password hashing, CSRF tokens, role checks and ownership checks. Browser storage is not used for application data.
-
-## Server files and troubleshooting
-
-PHP uses XAMPP's configured session directory, normally `C:/xampp2/tmp`. Login-attempt counters and setup locks are plain files in that same server directory, outside the website. PHP must be able to write there. No additional project storage directory is created.
-
-Setup pages are restricted to direct local access. Reopening `createdb.php` reinstalls stored procedures and keeps existing tables and rows. Reopening `populatedb.php` adds missing sample accounts and equipment, but does not reset existing passwords, roles or stock. A sample username with a conflicting role stops population before inserts. Population can be retried after a failure to add any remaining samples. Setup runs only one request at a time; no completion marker prevents a fresh database from being populated. The SQL uses separate table and procedure blocks, like the supplied airline example. Reinstalling the current three-table design preserves existing rows. Older incompatible drafts need a separate migration; the main schema no longer contains legacy conversion code.
-
-If you see `Error: Code 0001`, the PDO connection failed. Start MySQL, check the port and credentials in `config/config.php`, and open `database/createdb.php` locally. Do not drop tables to fix connection errors. Back up the database separately before moving the project. Never publish database credentials, and disable both setup pages before exposing the website publicly.
-
-The supplied slim jQuery asset has unused structured-data parsing removed. SB Admin 2 uses native smooth scrolling instead of the optional effects plugin. Vendor license notices are retained.
+Root with an empty password and these sample accounts are for local demos. Before public deployment, replace sample passwords, use a restricted database account, enable HTTPS and disable browser setup pages.
