@@ -1,0 +1,12 @@
+Options -Indexes
+DirectoryIndex index.php
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?:config|includes)(?:/|$) - [F,L,NC]
+RewriteRule ^database/(?!createdb\.php$|populatedb\.php$) - [F,L,NC]
+RewriteRule (^|/)\. - [F,L]
+RewriteRule \.(?:md|sql|log)$ - [F,L,NC]
+</IfModule>
+<FilesMatch "\.(md|sql|log)$">
+Require all denied
+</FilesMatch>

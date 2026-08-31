@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(?!createdb\.php$|populatedb\.php$).+">
+Require all denied
+</FilesMatch>
