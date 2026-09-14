@@ -1,5 +1,4 @@
 <?php
-// Used by database/createdb.php and database/populatedb.php to display setup results.
 ?>
 <!doctype html>
 <html lang="en">

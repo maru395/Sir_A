@@ -1,7 +1,5 @@
 <?php
 declare(strict_types=1);
-
-// This file is included by PHP pages, never served as a page itself.
 if (PHP_SAPI !== 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     http_response_code(404);
     exit;
@@ -34,7 +32,6 @@ class Config
         }
     }
 
-    // Pages call these methods; each one calls a stored procedure from schema.sql.
     public function loginUser(string $username): array
     {
         return $this->executeProcedure('CALL sp_auth_find(?)', [$username]);
@@ -160,15 +157,11 @@ class Config
         return $this->executeProcedure('CALL sp_report_full(?,?,?)', [$actor, $limit, $offset]);
     }
 
-    // Keep the PDO work in one place instead of repeating it for every procedure.
     private function executeProcedure(string $sql, array $parameters): array
     {
-        // Bind form values separately so they cannot change the SQL command.
-        // Let the endpoint turn any PDO exception into a safe error message.
         $statement = $this->pdo->prepare($sql);
         $statement->execute($parameters) or die('Database operation failed.');
         $rows = $statement->columnCount() ? $statement->fetchAll() : [];
-        // Finish this result before calling another stored procedure.
         $statement->closeCursor();
         return $rows;
     }

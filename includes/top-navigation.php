@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php for the top navigation on both dashboard pages.
 ?>
 <header class="navbar navbar-expand navbar-light bg-white topbar shadow-sm">
     <button

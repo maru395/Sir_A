@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php for the greeting and inventory summary on both dashboards.
 ?>
 <section id="section-overview" class="page-section" aria-label="Overview">
     <h2 class="h4 text-gray-900 mb-4">

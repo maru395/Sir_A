@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/includes/page-helpers.php';
-// These strings must match the inline handlers below so the browser will allow them.
 $inlineHandlers = ["return validateFormBeforeSubmit('auth-form');", "resetRegistrationValidation('auth-form')"];
 $hintIds = [
     'first_name' => 'firstNameHint',

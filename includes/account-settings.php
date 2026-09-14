@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php for the account and password form on both dashboards.
 ?>
 <section id="section-account" class="page-section" aria-label="Account" hidden>
     <div class="section-intro">

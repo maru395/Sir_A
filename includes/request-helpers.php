@@ -1,6 +1,4 @@
 <?php
-// Used by read.php, includes/page-helpers.php, includes/form-validation.php and includes/setup-access.php.
-// Provides the shared database connection, sessions and request checks.
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/config/config.php';
 
@@ -20,7 +18,6 @@ final class HttpError extends RuntimeException
 
 final class App
 {
-    // Keep this ID unchanged so existing sessions, attempt counts and setup locks still work.
     public const STORAGE_ID = 'localhost3306inventorydb';
 
     private static ?Config $database = null;
@@ -28,7 +25,6 @@ final class App
 
     public static function db(): Config
     {
-        // Reuse the connection while handling this request.
         if (self::$database === null) {
             self::$database = new Config();
         }
@@ -42,7 +38,6 @@ final class App
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
         header('Referrer-Policy: same-origin');
-        // Allow the registration handlers without allowing every inline script.
         $attributes = "'none'";
         if ($inlineHandlers) {
             $hashes = [];
@@ -60,13 +55,11 @@ final class App
         ini_set('session.use_strict_mode', '1');
         ini_set('session.use_only_cookies', '1');
         $namespace = substr(hash('sha256', dirname(__DIR__) . self::STORAGE_ID), 0, 12);
-        // Use PHP's session directory configured by XAMPP, outside the website.
         session_name('AVITON_' . $namespace);
         session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => $secure, 'httponly' => true, 'samesite' => 'Lax']);
         if (!session_start()) {
             throw new RuntimeException('Cannot establish a secure session.');
         }
-        // Expire idle sign-ins after 30 minutes, and all sign-ins after 12 hours.
         $now = time();
         if (
             isset($_SESSION['user_id'])
@@ -85,7 +78,6 @@ final class App
     public static function clearSession(): void
     {
         $_SESSION = [];
-        // An old session ID must not work after signing in or signing out.
         session_regenerate_id(true);
         $_SESSION['csrf'] = bin2hex(random_bytes(32));
     }
@@ -96,7 +88,6 @@ final class App
         if (isset($_SESSION['user_id'])) {
             $user = self::db()->getUser((int) $_SESSION['user_id'])[0] ?? null;
         }
-        // Changing a password also signs out the user's other sessions.
         if ($user && (int) $user['session_version'] !== (int) ($_SESSION['session_version'] ?? 0)) {
             self::clearSession();
             $user = null;
@@ -109,7 +100,6 @@ final class App
 
     public static function role(string $role): array
     {
-        // Hiding an admin button is not enough; check every request too.
         $user = self::user();
         if ($user['role'] !== $role) {
             throw new HttpError(403, 'This action is not permitted for your account.');
@@ -119,7 +109,6 @@ final class App
 
     public static function csrf(): void
     {
-        // Reject form requests that did not come from this browser session.
         $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!is_string($token) || !hash_equals($_SESSION['csrf'], $token)) {
             throw new HttpError(403, 'Your security token expired. Reload the page and try again.');
@@ -151,11 +140,9 @@ final class App
 
     public static function throttle(string $scope, int $limit, int $window): void
     {
-        // Keep the attempt count on the server so clearing cookies cannot reset it.
         $namespace = substr(hash('sha256', self::STORAGE_ID), 0, 20);
         $bucket = hash('sha256', $scope . '|' . ($_SERVER['REMOTE_ADDR'] ?? 'local'));
         $file = fopen(self::temporaryDirectory() . '/aviton-limit-' . $namespace . '-' . $bucket . '.dat', 'c+');
-        // Lock the file so simultaneous attempts cannot overwrite each other.
         if (!$file || !flock($file, LOCK_EX)) {
             throw new HttpError(503, 'Sign-in protection is temporarily unavailable.');
         }
@@ -181,7 +168,6 @@ final class App
         }
     }
 
-    // XML keeps responses structured without adding another data format to the project.
     public static function respond(array $body, int $status = 200): void
     {
         http_response_code($status);
@@ -226,7 +212,6 @@ final class App
 
     public static function temporaryDirectory(): string
     {
-        // PHP allows a depth/mode prefix before the actual session path.
         $parts = explode(';', session_save_path());
         $directory = end($parts) ?: sys_get_temp_dir();
         if (!is_dir($directory) || !is_writable($directory)) {
@@ -249,7 +234,6 @@ final class App
                 $parts = explode('|', $error->errorInfo[2] ?? '', 2);
                 $field = $parts[0];
                 $message = $parts[1] ?? 'Request cannot be completed.';
-                // Procedures send field|message so the form can show the right error.
                 $status = match ($field) {
                     'forbidden' => 403,
                     'conflict' => 409,
@@ -264,7 +248,6 @@ final class App
             } elseif (in_array((int) ($error->errorInfo[1] ?? 0), [1205, 1213], true)) {
                 self::respond(['ok' => false, 'message' => 'Another request is changing this item. Please retry.'], 409);
             } else {
-                // Never send database credentials or raw database errors to the page.
                 $code = (int) ($error->errorInfo[1] ?? 0);
                 $message = in_array($code, [2002, 2003], true)
                         ? 'Cannot reach MySQL. Start MySQL in XAMPP and check the port in config/config.php.'
@@ -277,13 +260,11 @@ final class App
     }
 }
 
-// Compatibility with the project's PHP 8.0 installation.
 function array_is_list_compat(array $value): bool
 {
     return $value === []
     || array_keys($value) === range(0, count($value) - 1);
 }
-// Show saved text as text, even if it contains HTML characters.
 function h($value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

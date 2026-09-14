@@ -1,5 +1,4 @@
 <?php
-// Used by validation.php, validate_registration.php and save.php to check form input.
 declare(strict_types=1);
 require_once __DIR__ . '/request-helpers.php';
 
@@ -15,7 +14,6 @@ final class Validation
 
     private function text(string $key, int $max, bool $required = true): string
     {
-        // Ignore extra spaces around normal text fields.
         $text = trim((string) ($this->data[$key] ?? ''));
         if (
             ($required && $text === '')
@@ -29,7 +27,6 @@ final class Validation
 
     private function integer(string $key, int $minimum = 1, int $maximum = 1000000): int
     {
-        // Quantities and IDs must be whole numbers, not decimals or scientific notation.
         $raw = (string) ($this->data[$key] ?? '');
         if (
             !preg_match('/^(0|[1-9][0-9]*)$/D', $raw)
@@ -45,9 +42,7 @@ final class Validation
 
     private function password(string $key): string
     {
-        // Spaces may be part of a password, so leave it exactly as typed.
         $password = (string) ($this->data[$key] ?? '');
-        // Bcrypt only uses the first 72 bytes; reject longer passwords instead of cutting them off.
         if (mb_strlen($password) < 12) {
             $this->errors[$key] = 'Please use at least 12 characters. A few words together can be easier to remember.';
         } elseif (strlen($password) > 72) {
@@ -68,7 +63,6 @@ final class Validation
         }
     }
 
-    // Both live field checks and final saving use these same rules.
     private function registrationValue(string $field): string
     {
         $raw = trim((string) ($this->data[$field] ?? ''));
@@ -171,7 +165,6 @@ final class Validation
             return $data;
         }
         $user = App::user();
-        // Use the signed-in user, never an ID sent by the form.
         $data['actor'] = (int) $user['id'];
         if ($action === 'logout') {
             return $data;
@@ -207,7 +200,6 @@ final class Validation
                 if ($data['total_quantity'] < (int) $item['total_quantity'] - (int) $item['available_quantity']) {
                     $validator->errors['total_quantity'] = 'Total cannot be below the units currently on loan.';
                 }
-                // Stop an older form from overwriting someone else's edit.
                 if ((int) $item['version'] !== $data['version']) {
                     throw new HttpError(409, 'Equipment changed. Reload it before saving.');
                 }
@@ -224,7 +216,6 @@ final class Validation
             if ((int) $item['version'] !== $data['version']) {
                 throw new HttpError(409, 'Equipment changed. Refresh before deleting.');
             }
-            // Deleting this item would also break the meaning of its past loans.
             if ((int) $item['has_records']) {
                 throw new HttpError(422, 'Cannot delete equipment with borrowing records. Transaction history must be preserved.');
             }
@@ -240,7 +231,6 @@ final class Validation
             if (!preg_match('/^[a-f0-9]{32}$/D', $data['request_token'])) {
                 $validator->errors['request_token'] = 'Reload the form before submitting.';
             }
-            // The procedure checks stock and repeated submissions together while the rows are locked.
         } elseif (
             in_array(
                 $action,

@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/form-validation.php';
 
-// A short text reply is enough to show an error beside one field.
 try {
     App::boot();
     header('Content-Type: text/plain; charset=utf-8');

@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php for the navigation on both dashboard pages.
 $navigation = [
     ['overview', 'section-overview', 'Overview', 'fa-home'],
     ...($isAdmin ? [
