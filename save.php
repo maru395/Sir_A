@@ -11,13 +11,11 @@ App::run(static function (): array {
     if ($action === 'register') {
         App::throttle('register', 10, 3600);
     }
-    // Check again here: a request can reach save.php without using our form.
     $data = Validation::validate($body);
     $db = App::db();
 
 
     if ($action === 'register') {
-        // Store a hash so a database leak does not reveal the password itself.
         $db->registerUser(
             $data['username'],
             password_hash($data['password'], PASSWORD_DEFAULT),
@@ -32,7 +30,6 @@ App::run(static function (): array {
     if ($action === 'login') {
         App::throttle('login:' . $data['username'], 10, 900);
         $user = $db->loginUser($data['username'])[0] ?? null;
-        // Check a dummy hash for unknown usernames too, so failures take similar time.
         $hash = $user['password_hash'] ?? '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.';
         $verified = password_verify($data['password'], $hash);
         if (!$verified || !$user || !(int) $user['is_active']) {
@@ -91,7 +88,6 @@ App::run(static function (): array {
             'id' => $rows[0]['id']
         ];
     }
-    // The procedure updates the record and stock together, or changes neither.
     $db->transitionRecord($data['actor'], $data['record_id'], $action, $data['note']);
     $messages = [
         'approve_borrow' => 'Handover confirmed. Stock has been updated.',

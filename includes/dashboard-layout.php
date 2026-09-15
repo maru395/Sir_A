@@ -1,5 +1,4 @@
 <?php
-// Used by dashboard.php and admin-dashboard.php as their shared page layout.
 $isAdmin = $user['role'] === 'ADMIN';
 require __DIR__ . '/page-head.php';
 ?>

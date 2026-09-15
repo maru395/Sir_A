@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php only on admin-dashboard.php to show inventory reports.
 ?>
 <section id="section-reports" class="page-section" aria-label="Database reports" hidden>
     <div class="section-intro">

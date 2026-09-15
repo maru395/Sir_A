@@ -14,7 +14,6 @@ try {
         PDO::ATTR_EMULATE_PREPARES => false,
     ];
 
-    // Connect to MySQL first because the database might not exist yet.
     $pdo = new PDO("mysql:host={$host};charset=utf8mb4", $username, $password, $options);
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `inventorydb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo = new PDO("mysql:host={$host};dbname={$dbname};charset=utf8mb4", $username, $password, $options);
@@ -26,7 +25,6 @@ try {
     $delimiter = ';';
     $statement = '';
 
-    // A procedure contains semicolons, so wait for its closing delimiter.
     foreach (preg_split('/\R/', $schema) as $line) {
         if (trim($line) === '' || str_starts_with(trim($line), '--')) {
             continue;

@@ -44,7 +44,6 @@ App::run(static function (): array {
             $history = trim($rows[0]['events'] ?? '', "\r\n");
             $rows = [];
             foreach ($history === '' ? [] : explode("\n", $history) as $line) {
-                // History text is encoded so notes can safely contain tabs and newlines.
                 $fields = explode("\t", $line);
                 if (count($fields) !== 5) {
                     throw new RuntimeException('Invalid history entry.');

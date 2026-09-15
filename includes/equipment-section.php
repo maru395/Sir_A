@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php for user borrowing and admin equipment management.
 ?>
 <section id="<?= $isAdmin ? 'section-equipment' : 'section-borrow' ?>" class="page-section" aria-label="Equipment" hidden>
     <div class="section-intro">

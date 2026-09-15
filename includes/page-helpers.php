@@ -1,6 +1,4 @@
 <?php
-// Used by index.php, register.php, dashboard.php and admin-dashboard.php.
-// Checks page access and provides the shared form helpers.
 declare(strict_types=1);
 require_once __DIR__ . '/request-helpers.php';
 function pageUser(?string $requiredRole = null, array $inlineHandlers = []): ?array
@@ -35,7 +33,6 @@ function field(
     static $count = 0;
     $id = 'field-' . (++$count);
     $errorId = $id . '-error';
-    // Match each label and error span to one input, including inside modals.
     echo '<div class="field"><label class="form-label" for="' . $id . '">'
         . h($label)
         . ($required ? '' : ' <span class="text-secondary">(optional)</span>')

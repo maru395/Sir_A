@@ -1,9 +1,7 @@
 <?php
-// Used by database/createdb.php and database/populatedb.php to protect setup requests.
 declare(strict_types=1);
 require_once __DIR__ . '/request-helpers.php';
 
-// These pages change the database, so only allow direct local requests.
 ini_set('display_errors', '0');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -33,7 +31,6 @@ if (!$allowed || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
     die('Setup can only be opened directly on this computer using localhost or 127.0.0.1.');
 }
 
-// Keep two setup requests from changing the database at the same time.
 $setupKey = substr(hash('sha256', App::STORAGE_ID), 0, 20);
 $setupLock = fopen(App::temporaryDirectory() . '/aviton-setup-' . $setupKey . '-setup.lock', 'c+');
 if (!$setupLock || !flock($setupLock, LOCK_EX | LOCK_NB)) {

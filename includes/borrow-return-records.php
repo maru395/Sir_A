@@ -1,5 +1,4 @@
 <?php
-// Used by includes/dashboard-layout.php for user records and the admin borrow/return monitor.
 ?>
 <section id="<?= $isAdmin ? 'section-admin' : 'section-mine' ?>" class="page-section" aria-label="Borrowing records" hidden>
     <div class="section-intro">

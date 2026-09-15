@@ -1,7 +1,5 @@
 <?php
-// Used by includes/dashboard-layout.php for the action, equipment and history dialogs.
 ?>
-<!-- Bootstrap 4 modals; submissions go through validation.php then save.php. -->
 <div id="action-dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="action-title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">

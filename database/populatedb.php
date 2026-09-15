@@ -31,7 +31,6 @@ try {
     foreach ($accounts as $account) {
         $findAccount->execute([':username' => $account['username']]);
         $existing = $findAccount->fetch();
-        // Do not change another account's role or replace its password.
         if ($existing && $existing['role'] !== $account['role']) {
             throw new RuntimeException('A sample username belongs to another role. Review the existing accounts before running population.');
         }
@@ -47,7 +46,6 @@ try {
     foreach ($missingAccounts as $account) {
         $insertAccount->execute([
             ':username' => $account['username'],
-            // Store hashes even for the two sample passwords.
             ':password_hash' => password_hash($account['password'], PASSWORD_DEFAULT),
             ':role' => $account['role'],
             ':first_name' => $account['first_name'],
@@ -56,7 +54,6 @@ try {
         ]);
     }
 
-    // Each row contains the item code, name, category and starting quantity.
     $equipment = [
         ['ITM-001', 'Aviation Headset', 'Communication', 10],
         ['ITM-002', 'Handheld GPS Unit', 'Navigation', 6],
@@ -73,7 +70,6 @@ try {
     $equipmentAdded = 0;
     foreach ($equipment as [$code, $name, $category, $quantity]) {
         $findEquipment->execute([':code' => $code]);
-        // Keep current stock and borrowed quantities when setup is refreshed.
         if ($findEquipment->fetch()) {
             continue;
         }

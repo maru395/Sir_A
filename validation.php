@@ -4,7 +4,6 @@ require_once __DIR__ . '/includes/form-validation.php';
 App::run(static function (): array {
     $data = Validation::validate(App::body());
     if ($data['action'] === 'borrow_request') {
-        // A retry should reuse its original request, even if stock has changed since then.
         $existing = App::db()->findExistingRequest($data['actor'], $data['request_token'])[0] ?? null;
         if ($existing) {
             if (

@@ -1,6 +1,3 @@
--- Run database/createdb.php to create and select inventorydb.
--- Keep existing rows when installing again; do not drop these tables.
-
 CREATE TABLE IF NOT EXISTS `user`
 (
     id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -66,21 +63,18 @@ CREATE TABLE IF NOT EXISTS records
         OR (status IN ('BORROWED', 'RETURN_PENDING') AND borrowed_at IS NOT NULL AND returned_at IS NULL)
         OR (status = 'RETURNED' AND borrowed_at IS NOT NULL AND returned_at IS NOT NULL)
     ),
-    -- A retry with the same token must not create another borrowing record.
     UNIQUE KEY uq_request(user_id, request_token),
     INDEX idx_records_owner_status(user_id, status, id),
     INDEX idx_records_equipment_status(equipment_id, status),
     INDEX idx_records_status(status, id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- Remove unused procedures left by older drafts.
 DROP PROCEDURE IF EXISTS sp_prepare_history;
 DROP PROCEDURE IF EXISTS sp_create_admin;
 DROP PROCEDURE IF EXISTS sp_rate_limit;
 DROP PROCEDURE IF EXISTS sp_equipment_archive;
 DROP PROCEDURE IF EXISTS sp_setup_populate;
 
--- History helpers
 DROP PROCEDURE IF EXISTS sp_record_event;
 DELIMITER $$
 CREATE PROCEDURE sp_record_event
@@ -91,7 +85,6 @@ CREATE PROCEDURE sp_record_event
     IN p_note VARCHAR(500)
 )
 BEGIN
-    -- Encoding the note keeps its tabs and newlines from breaking the history format.
     UPDATE records
     SET history = CONCAT(
         COALESCE(history, ''),
@@ -128,7 +121,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Account checks and login
 DROP PROCEDURE IF EXISTS sp_assert_role;
 DELIMITER $$
 CREATE PROCEDURE sp_assert_role
@@ -235,7 +227,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Equipment
 DROP PROCEDURE IF EXISTS sp_equipment_list;
 DELIMITER $$
 CREATE PROCEDURE sp_equipment_list
@@ -313,7 +304,6 @@ BEGIN
     DECLARE v_available INT;
     DECLARE v_version INT;
     DECLARE v_before TEXT DEFAULT NULL;
-    -- Undo the whole change if any step fails, including the history entry.
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -409,7 +399,6 @@ BEGIN
     DECLARE v_version INT;
     DECLARE v_total INT;
     DECLARE v_available INT;
-    -- Undo the whole change if any step fails, including the history entry.
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -420,7 +409,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'form|Invalid equipment deletion request.';
     END IF;
     START TRANSACTION;
-    -- Lock this item so it cannot be borrowed or edited during deletion.
     SELECT
         id, version, total_quantity, available_quantity
     INTO v_id, v_version, v_total, v_available
@@ -439,13 +427,11 @@ BEGIN
     IF v_available <> v_total THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'form|Cannot delete equipment while units are on loan.';
     END IF;
-    -- Foreign keys also prevent deletion if any transaction references the item.
     DELETE FROM equipment WHERE id = p_id;
     COMMIT;
 END$$
 DELIMITER ;
 
--- Borrowing and returning
 DROP PROCEDURE IF EXISTS sp_request_existing;
 DELIMITER $$
 CREATE PROCEDURE sp_request_existing
@@ -481,7 +467,6 @@ BEGIN
     DECLARE v_equipment INT;
     DECLARE v_quantity INT;
     DECLARE v_note VARCHAR(500);
-    -- Undo the whole change if any step fails, including the history entry.
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -495,7 +480,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'form|Invalid request token. Reload the page.';
     END IF;
     START TRANSACTION;
-    -- Lock the user first so two retries cannot create the same request twice.
     SELECT
         id
     INTO v_id
@@ -560,7 +544,6 @@ BEGIN
     DECLARE v_status VARCHAR(20);
     DECLARE v_stock INT;
     DECLARE v_event VARCHAR(32);
-    -- Undo the whole change if any step fails, including the history entry.
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -598,7 +581,6 @@ BEGIN
     IF p_action IN ('confirm_return', 'reject_return') AND v_status <> 'RETURN_PENDING' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'conflict|There is no pending return to confirm.';
     END IF;
-    -- A pending request does not remove stock. Confirm the handover first.
     IF p_action = 'approve_borrow' THEN
         SELECT
             available_quantity
@@ -620,7 +602,6 @@ BEGIN
             released_by = p_actor
         WHERE id = p_record;
         SET v_event = 'RELEASE_CONFIRMED';
-    -- Add stock back only after staff have received all the borrowed units.
     ELSEIF p_action = 'confirm_return' THEN
         UPDATE equipment
         SET available_quantity = available_quantity + v_quantity,
@@ -633,7 +614,6 @@ BEGIN
             received_by = p_actor
         WHERE id = p_record;
         SET v_event = 'RETURN_CONFIRMED';
-    -- A user's return request alone is not proof the equipment was received.
     ELSEIF p_action = 'request_return' THEN
         UPDATE records
         SET status = 'RETURN_PENDING',
@@ -682,7 +662,6 @@ BEGIN
     INTO v_role
     FROM `user`
     WHERE id = p_actor;
-    -- INNER JOIN: only real `user`/equipment can appear; FKs enforce the relationship.
     SELECT
         r.*, CONCAT(u.first_name, ' ', u.last_name) AS borrower_name, u.username,
         e.name AS current_equipment_name, release_user.username AS released_by_name,
@@ -778,7 +757,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Reports
 DROP PROCEDURE IF EXISTS sp_report_equipment;
 DELIMITER $$
 CREATE PROCEDURE sp_report_equipment
@@ -789,7 +767,6 @@ CREATE PROCEDURE sp_report_equipment
 )
 BEGIN
     CALL sp_assert_role(p_actor, 'ADMIN');
-    -- LEFT JOIN includes equipment with zero requests/loans.
     SELECT
         e.code, e.name, e.total_quantity, e.available_quantity, COUNT(r.id) AS requests,
         COALESCE(SUM(CASE WHEN r.borrowed_at IS NOT NULL THEN r.quantity ELSE 0 END), 0) AS released_units,
@@ -813,7 +790,6 @@ CREATE PROCEDURE sp_report_users
 )
 BEGIN
     CALL sp_assert_role(p_actor, 'ADMIN');
-    -- RIGHT JOIN retains `user` who have never requested equipment.
     SELECT
         u.username, CONCAT(u.first_name, ' ', u.last_name) AS name, u.role,
         COUNT(r.id) AS requests,
@@ -837,8 +813,6 @@ CREATE PROCEDURE sp_report_full
 )
 BEGIN
     CALL sp_assert_role(p_actor, 'ADMIN');
-    -- MariaDB has no FULL OUTER JOIN, so combine both sides without repeating matches.
-    -- Foreign keys normally prevent activity with no matching equipment.
     WITH activity AS (
     SELECT
         equipment_id, SUM(quantity) AS released_units
